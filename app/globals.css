@@ -192,9 +192,14 @@ html {
   transition: transform 500ms ease;
 }
 
-.project-card > * {
+.project-card > :not(.project-accent-line) {
   position: relative;
   z-index: 1;
+}
+
+.project-accent-line {
+  z-index: 2;
+  box-shadow: 0 0 1.5rem rgba(124, 156, 255, 0.24);
 }
 
 .skill-pill {

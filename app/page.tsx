@@ -167,7 +167,8 @@ export default function Home() {
                 className={`project-card group ${index === 0 ? "md:col-span-2" : ""}`}
               >
                 <div
-                  className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${project.accent} opacity-60`}
+                  className={`project-accent-line absolute inset-x-0 top-0 h-px bg-gradient-to-r ${project.accent} opacity-70`}
+                  aria-hidden="true"
                 />
                 <div className="flex items-start justify-between gap-6">
                   <div>
