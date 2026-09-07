@@ -16,12 +16,15 @@ type ContactContextValue = {
 
 const ContactContext = createContext<ContactContextValue | null>(null);
 
+type ContactResult = {
+  ok: boolean;
+  message: string;
+};
+
 export function ContactModalProvider({ children }: { children: ReactNode }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(
-    null,
-  );
+  const [result, setResult] = useState<ContactResult | null>(null);
 
   const openContact = () => {
     setResult(null);
@@ -39,8 +42,12 @@ export function ContactModalProvider({ children }: { children: ReactNode }) {
 
     const form = event.currentTarget;
     const response = await sendContactEmail(new FormData(form));
-    setResult(response);
     setIsSubmitting(false);
+
+    setResult({
+      ok: response.ok,
+      message: response.message,
+    });
 
     if (response.ok) form.reset();
   }
@@ -81,8 +88,11 @@ export function ContactModalProvider({ children }: { children: ReactNode }) {
               >
                 Message sent.
               </h2>
-              <p className="mx-auto mt-3 max-w-sm leading-7 text-muted">
-                {result.message} I&apos;ll get back to you as soon as I can.
+              <p className="mx-auto mt-4 max-w-md text-pretty text-[1.0625rem] leading-7 text-[#aeb6c8]">
+                <span className="font-medium text-white/90">
+                  {result.message}
+                </span>{" "}
+                I&apos;ll be in touch soon.
               </p>
               <button
                 type="button"
