@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Samuel Getachew — Software Engineer & AI Product Builder",
+  title: "Samuel Getachew.",
   description:
     "Samuel Getachew is a software engineer, product lead, and AI automation specialist building multi-tenant SaaS platforms, internal tools, and intelligent workflows.",
 };
