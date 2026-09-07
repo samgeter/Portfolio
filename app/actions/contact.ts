@@ -5,6 +5,27 @@ import nodemailer from "nodemailer";
 const RECIPIENT = "samgatemul@gmail.com";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function configurationError(message: string) {
+  console.error(`Contact email configuration error: ${message}`);
+
+  return {
+    ok: false,
+    message:
+      process.env.NODE_ENV === "development"
+        ? message
+        : "Email delivery is temporarily unavailable. Please try again later.",
+  };
+}
+
+function isGmailAuthError(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "EAUTH"
+  );
+}
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -22,7 +43,7 @@ export async function sendContactEmail(formData: FormData) {
   const website = String(formData.get("website") ?? "").trim();
 
   if (website) {
-    return { ok: true, message: "Thanks - your note is on its way." };
+    return { ok: true, message: "Thanks for reaching out." };
   }
 
   if (
@@ -45,15 +66,27 @@ export async function sendContactEmail(formData: FormData) {
     };
   }
 
-  const gmailUser = process.env.GMAIL_USER ?? RECIPIENT;
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD;
+  const gmailUser = (process.env.GMAIL_USER ?? RECIPIENT).trim().toLowerCase();
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD
+    ?.trim()
+    .replace(/\s+/g, "");
 
   if (!gmailAppPassword) {
-    return {
-      ok: false,
-      message:
-        "Email delivery is not configured yet. Please email samgatemul@gmail.com directly.",
-    };
+    return configurationError(
+      "Add GMAIL_APP_PASSWORD to .env.local, then restart the development server.",
+    );
+  }
+
+  if (gmailUser !== RECIPIENT) {
+    return configurationError(
+      `GMAIL_USER must be ${RECIPIENT} for this contact form.`,
+    );
+  }
+
+  if (gmailAppPassword.length !== 16) {
+    return configurationError(
+      "GMAIL_APP_PASSWORD must be a 16-character Google App Password, not your regular Gmail password. Update .env.local and restart the development server.",
+    );
   }
 
   const transporter = nodemailer.createTransport({
@@ -68,9 +101,9 @@ export async function sendContactEmail(formData: FormData) {
 
   try {
     await transporter.sendMail({
-      from: `Samuel Getachew Portfolio <${gmailUser}>`,
+      from: { name: "Samuel Getachew Portfolio", address: gmailUser },
       to: RECIPIENT,
-      replyTo: `${name} <${email}>`,
+      replyTo: { name, address: email },
       subject: `Portfolio inquiry from ${name}`,
       text: [
         `Name: ${name}`,
@@ -89,13 +122,19 @@ export async function sendContactEmail(formData: FormData) {
       `,
     });
 
-    return { ok: true, message: "Thanks - your note is on its way." };
+    return { ok: true, message: "Thanks for reaching out." };
   } catch (error) {
-    console.error("Contact email delivery failed", error);
+    const authFailed = isGmailAuthError(error);
+    console.error("Contact email delivery failed", {
+      code: authFailed ? "EAUTH" : "UNKNOWN",
+    });
+
     return {
       ok: false,
       message:
-        "The message could not be sent right now. Please email samgatemul@gmail.com directly.",
+        authFailed && process.env.NODE_ENV === "development"
+          ? "Gmail rejected the sender credentials. Create a new Google App Password, update GMAIL_APP_PASSWORD in .env.local, then restart the development server."
+          : "Direct email delivery failed. Please try again later.",
     };
   }
 }

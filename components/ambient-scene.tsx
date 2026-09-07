@@ -16,7 +16,6 @@ export function AmbientScene() {
       const mount = mountRef.current;
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-      camera.position.z = 5.8;
 
       const renderer = new THREE.WebGLRenderer({
         alpha: true,
@@ -32,11 +31,11 @@ export function AmbientScene() {
 
       const geometry = new THREE.IcosahedronGeometry(1.65, 2);
       const wireframe = new THREE.LineSegments(
-        new THREE.EdgesGeometry(geometry, 24),
+        new THREE.EdgesGeometry(geometry, 8),
         new THREE.LineBasicMaterial({
           color: 0x8aa7ff,
           transparent: true,
-          opacity: 0.24,
+          opacity: 0.2,
         }),
       );
       group.add(wireframe);
@@ -46,7 +45,7 @@ export function AmbientScene() {
         new THREE.MeshBasicMaterial({
           color: 0x6c8cff,
           transparent: true,
-          opacity: 0.42,
+          opacity: 0.34,
         }),
       );
       halo.rotation.x = 1.18;
@@ -64,9 +63,19 @@ export function AmbientScene() {
 
       const resize = () => {
         const { width, height } = mount.getBoundingClientRect();
-        renderer.setSize(width, height, false);
-        camera.aspect = width / Math.max(height, 1);
+        if (width <= 0 || height <= 0) return;
+
+        const aspect = width / height;
+        const sceneRadius = 1.95;
+        const halfVerticalFov = THREE.MathUtils.degToRad(camera.fov * 0.5);
+        const verticalFitDistance = sceneRadius / Math.tan(halfVerticalFov);
+        const horizontalFitDistance = verticalFitDistance / aspect;
+
+        camera.aspect = aspect;
+        camera.position.z =
+          Math.max(verticalFitDistance, horizontalFitDistance) * 1.04;
         camera.updateProjectionMatrix();
+        renderer.setSize(width, height);
       };
 
       const onScroll = () => {
@@ -117,5 +126,7 @@ export function AmbientScene() {
     };
   }, []);
 
-  return <div ref={mountRef} className="absolute inset-0" aria-hidden="true" />;
+  return (
+    <div ref={mountRef} className="absolute inset-0" aria-hidden="true" />
+  );
 }

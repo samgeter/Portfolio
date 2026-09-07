@@ -25,13 +25,15 @@ reply-to address.
 1. Enable two-step verification on the Google account and create a Google App
    Password for this portfolio. Do not use the account's normal password.
 2. Copy `.env.example` to `.env.local`.
-3. Replace `GMAIL_APP_PASSWORD` with the generated App Password.
-4. In Vercel, add `GMAIL_USER` and `GMAIL_APP_PASSWORD` under Project Settings
+3. Replace `GMAIL_APP_PASSWORD` with the generated 16-character App Password
+   (spaces are accepted and removed by the server).
+4. Restart `npm run dev` after changing `.env.local`.
+5. In Vercel, add `GMAIL_USER` and `GMAIL_APP_PASSWORD` under Project Settings
    > Environment Variables before deploying.
 
-Without the App Password, the modal remains usable and points visitors to the
-direct email address, but server-side delivery will report that it is not yet
-configured.
+Without the App Password, Gmail cannot authenticate the sender and the form
+will report that direct delivery is not configured. It will not create an email
+draft or claim the message was sent.
 
 ## Run locally
 
@@ -52,8 +54,9 @@ npm run build
 ## Deploy to Vercel
 
 Push the project to a Git repository, import it in Vercel, and deploy. Vercel
-will detect Next.js automatically; no custom build settings or environment
-variables are required.
+will detect Next.js automatically. No custom build settings are required, but
+the two Gmail environment variables above must be configured for contact-form
+delivery.
 
 ## Performance and accessibility
 
